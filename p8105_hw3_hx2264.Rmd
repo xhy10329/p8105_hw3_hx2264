@@ -1,0 +1,137 @@
+---
+title: "p8105_hw3_hx2264"
+author: "Hongyao Xie"
+date: "October 8, 2018"
+output: html_document
+---
+
+## Problem 1
+
+
+```{r echo = FALSE}
+devtools::install_github("p8105/p8105.datasets")
+library(p8105.datasets)
+library(tidyverse)
+library(ggridges)
+library(patchwork)
+library(dplyr)
+library(forcats)
+```
+
+
+```{r}
+# Load the data and use appropriate variable names
+data(brfss_smart2010)
+brfss <- janitor::clean_names(brfss_smart2010)
+
+# Focus on the "Overall Health" topic
+overall_health_index <- which(brfss[,"topic"] == "Overall Health")
+brfss <- brfss[overall_health_index,]
+
+# Include only responses from "Excellent" to "Poor"
+brfss <- filter(brfss, response == "Excellent" | response == "Very good" | response == "Good" | response == "Fair" | response == "Poor")
+
+# Organize responses as a factor taking levels from “Excellent” to “Poor”
+brfss[, "response"] <- as.factor(unlist(brfss[, "response"]))
+```
+
+**In 2002, which states were observed at 7 locations?**
+
+```{r}
+index_2002 <- which(brfss$year == 2002)
+brfss_2002 <- brfss[index_2002,]
+unique_location <- unique(brfss_2002[,"locationdesc"])
+location_by_state <- as.factor(substr(unique_location$locationdesc, 1, 2))
+names(which(summary(location_by_state) == 7))
+```
+
+3 states were observed at 7 locations: `r names(which(summary(location_by_state) == 7))`.
+
+**Make a “spaghetti plot” that shows the number of observations in each state from 2002 to 2010.**
+
+```{r}
+brfss %>%
+  group_by(year, locationabbr) %>%
+  summarize(uniq = length(unique(locationdesc))) %>%
+  ggplot(aes(x = year, y = uniq, color = locationabbr)) + 
+    geom_line() +
+    labs(
+      title = "Spaghetti plot of observations in each state from 2002 to 2010",
+      x = "Year",
+      y = "Number of observations"
+    ) +
+  theme(legend.position = "right")
+```
+
+**Make a table showing, for the years 2002, 2006, and 2010, the mean and standard deviation of the proportion of “Excellent” responses across locations in NY State.**
+
+```{r}
+brfss %>%
+  filter(., locationabbr == "NY") %>%
+  filter(., year == 2002 | year == 2006 | year == 2010) %>%
+  filter(., response == "Excellent") %>%
+  group_by(year) %>%
+  summarize(mean = mean(data_value),
+            sd = sd(data_value)) %>%
+  knitr::kable(digits = 1)
+```
+
+**For each year and state, compute the average proportion in each response category (taking the average across locations in a state). Make a five-panel plot that shows, for each response category separately, the distribution of these state-level averages over time.**
+
+```{r}
+#make a five-panel plot
+brfss %>% 
+  mutate(., response_ordered = forcats::fct_relevel(response, c("Excellent", "Very good", "Good", "Fair", "Poor"))) %>% 
+  group_by( year, locationabbr, response_ordered) %>% 
+  summarise(mean = mean(data_value)) %>% 
+  ggplot() +
+  geom_point(aes(x = year, y = mean),na.rm = TRUE) + 
+  labs(
+    title = "Five-panel plot of the distribution of state-level averages over time",
+    x = "Year",
+    y = "Averages"
+  ) +
+  facet_grid(~response_ordered)
+```
+
+
+## Problem 2
+
+```{r}
+library(p8105.datasets)
+data("instacart")
+
+itc <- instacart %>%
+  janitor::clean_names()
+``` 
+
+**How many aisles are there, and which aisles are the most items ordered from?**
+
+```{r}
+nrow(unique(itc[,"aisle"]))
+names(which.max(table(itc[,"aisle"])))
+```
+
+There are `r nrow(unique(itc[,"aisle"]))` aisles, out of which `names(which.max(table(itc[,"aisle"])))` is the most items ordered from.
+
+**Make a plot that shows the number of items ordered in each aisle. Order aisles sensibly, and organize your plot so others can read it.**
+
+```{r}
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
